@@ -68,6 +68,9 @@ fit_hist = r.TH2F("fit", "fit", 60,0,6,60,0,6)
 res_hist = r.TH2F("res", "res", 60,0,6,60,0,6)
 signal_hist = r.TH2F("sig", "sig", 60,0,6,60,0,6)
 
+total_signal = 0
+total_err_sq = 0
+
 for i in range(xbins):
     for j in range(ybins):
         val = best_fit[i][j]
@@ -78,8 +81,14 @@ for i in range(xbins):
         res_hist.SetBinContent(i+1, j+1, res)
 
         bkg_val = hbkg.GetBinContent(hist.FindBin(x_centers[i], y_centers[j]))
-        sig = val - bkg_val*results.params['norm'].value
+        sig = true_val - bkg_val*results.params['norm'].value
+        total_signal += sig
+        total_err_sq += sig + bkg_val*results.params['norm'].value**2 + bkg_val**2*results.params['norm'].stderr**2
         signal_hist.SetBinContent(i+1, j+1, sig)
+
+
+
+print(f"The total signal events are {total_signal} +- {np.sqrt(total_err_sq):.3f}")
         
 
 tc = r.TCanvas()
@@ -95,7 +104,7 @@ signal_hist.Draw("Lego")
 
 tc.Update()
 tc.Draw()
-r.gApplication.Run()
+tc.SaveAs("ex3.pdf")
 
 
 

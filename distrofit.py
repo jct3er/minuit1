@@ -104,5 +104,5 @@ ax[1].set_xlabel("Value")
 ax[1].set_ylabel("Counts")
 ax[1].legend()
 
-plt.show()
+plt.savefig("ex1.pdf")
 
