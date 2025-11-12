@@ -38,11 +38,17 @@ Exercise 3 is in the file 2dfit.py
 Best Fit Paramters:
 
 A : 54.00 +- 0.567
+
 Mu1 : 3.52 +- 0.006
+
 Mu2 : 1.90 +- 0.016
+
 Sigma1 : 0.99 +- 0.008
+
 Sigma2 : 1.95 +- 0.020
+
 Background Normalization : 0.25 +- 0.002
+
 
 The total number of signal events is 34026 +- 201. I calculated this by adding for each bin the hdata count in that bin subtracted by hbkg of that bin times the background normalization. I got the error by doing error propagation to get the error on the signal count in each bin and then added those in quadriture.
 
