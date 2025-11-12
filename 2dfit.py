@@ -87,6 +87,13 @@ for i in range(xbins):
         signal_hist.SetBinContent(i+1, j+1, sig)
 
 
+print(f"A : {results.params['A'].value:.2f} +- {results.params['A'].stderr:.3f}")
+print(f"Mu1 : {results.params['mu1'].value:.2f} +- {results.params['mu1'].stderr:.3f}")
+print(f"Mu2 : {results.params['mu2'].value:.2f} +- {results.params['mu2'].stderr:.3f}")
+print(f"Sigma1 : {results.params['sigma1'].value:.2f} +- {results.params['sigma1'].stderr:.3f}")
+print(f"Sigma2 : {results.params['sigma2'].value:.2f} +- {results.params['sigma2'].stderr:.3f}")
+print(f"Background Normalization : {results.params['norm'].value:.2f} +- {results.params['norm'].stderr:.3f}")
+
 
 print(f"The total signal events are {total_signal} +- {np.sqrt(total_err_sq):.3f}")
         
