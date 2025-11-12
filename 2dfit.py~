@@ -1,0 +1,109 @@
+import numpy as np
+from lmfit import minimize, Parameters
+import ROOT as r
+import matplotlib.pyplot as plt
+
+
+file = r.TFile("fitInputs.root")
+hist = file.Get("hdata")
+hbkg = file.Get("hbkg")
+
+xbins = hist.GetNbinsX()
+ybins = hist.GetNbinsY()
+x_centers = np.array([hist.GetXaxis().GetBinCenter(i) for i in range(1, xbins+1)])
+y_centers = np.array([hist.GetYaxis().GetBinCenter(i) for i in range(1, ybins+1)])
+counts = []
+for i in x_centers:
+    for j in y_centers:
+        counts.append(hist.GetBinContent(hist.FindBin(i,j)))
+
+counts = np.array(counts)
+errs = np.sqrt(counts)
+
+def fit(x, y, A, mu1, mu2, sigma1, sigma2, norm):
+    val = []
+    for i in x:
+        for j in y:
+            bin_num = hbkg.FindBin(i, j)
+            val.append(A*np.exp((i-mu1)**2/sigma1**2)*np.exp((j-mu2)**2/sigma2)+hbkg.GetBinContent(bin_num)*norm)
+
+    return val
+
+def objective(params, x, y, data, errs):
+    A = params['A']
+    mu1 = params['mu1']
+    mu2 = params['mu2']
+    sig1 = params['sigma1']
+    sig2 = params['sigma2']
+    norm = params['norm']
+
+    model = fit(x, y, A, mu1, mu2, sig1, sig2, norm)
+
+    res = []
+    for i in range(len(errs)):
+        if errs[i] == 0:
+            continue
+        res.append((model[i] - data[i]) / errs[i])
+    
+    return res
+
+params = Parameters()
+params.add("A", value=20)
+params.add("mu1", value=3.5)
+params.add("mu2", value=2.1)
+params.add("sigma1", value=1.4)
+params.add("sigma2", value=1.4)
+params.add("norm", value=10)
+
+results = minimize(objective, params, args=(x_centers, y_centers, counts, errs))
+
+best_fit = fit(x_centers, y_centers, results.params['A'].value, results.params['mu1'].value, results.params['mu2'].value, results.params['sigma1'].value, results.params['sigma2'].value, results.params['norm'].value)
+
+fit_hist = r.TH2F("fit", "fit", 60,0,6,60,0,6)
+res_hist = r.TH2F("res", "res", 60,0,6,60,0,6)
+signal_hist = r.TH2F("sig", "sig", 60,0,6,60,0,6)
+
+for i in range(xbins):
+    for j in range(ybins):
+        count = int(round(best_fit[60*i+j],0))
+        for k in range(count):
+            fit_hist.Fill(x_centers[i], y_centers[j])
+
+        true_val = counts[60*i+j]
+        res = int(round(count - true_val,0))
+        for k in range(res):
+            res_hist.Fill(x_centers[i], y_centers[j])
+
+        bkg_val = hbkg.GetBinContent(hist.FindBin(x_centers[i], y_centers[j]))
+        sig = int(round(count - bkg_val,0))
+        for k in range(sig):
+            signal_hist.Fill(x_centers[i], y_centers[j])
+
+print(len(best_fit))
+s = np.array(best_fit).reshape((60,60))
+print(len(s))
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+ax.plot_wireframe(x_centers, y_centers, best_fit, rstride=10, cstride=10)
+plt.show()
+
+        
+
+tc = r.TCanvas()
+tc.Divide(2,2)
+tc.cd(1)
+hist.Draw("Lego")
+tc.cd(2)
+fit_hist.Draw("Lego")
+tc.cd(3)
+res_hist.Draw("Lego")
+tc.cd(4)
+signal_hist.Draw("Lego")
+
+tc.Update()
+tc.Draw()
+r.gApplication.Run()
+
+
+
+    
